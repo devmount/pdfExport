@@ -1,134 +1,425 @@
-<?php if(!defined('IS_CMS')) die();
+<?php
 
 /**
- * Plugin:   pdfExport
- * @author:  HPdesigner (hpdesigner[at]web[dot]de)
- * @version: v0.0.2013-10-13
- * @license: GPL
- * @see:     Give thanks to the LORD, for he is good; his love endures forever.
- *           - The Bible
+ * moziloCMS Plugin: pdfExport
+ *
+ * Generates a pdf export link, to stream the current content page into an PDF file
+ * with the help of the pdfmyurl.com webservice.
+ *
+ * PHP version 5
+ *
+ * @category PHP
+ * @package  PHP_MoziloPlugins
+ * @author   HPdesigner <mail@devmount.de>
+ * @license  GPL v3
+ * @version  GIT: v0.0.2013-10-13
+ * @link     https://github.com/devmount/pdfExport
+ * @link     http://devmount.de/Develop/Mozilo%20Plugins/pdfExport.html
+ * @see      Give thanks to the LORD, for he is good; his love endures forever.
+ *           – The Bible
  *
  * Plugin created by DEVMOUNT
  * www.devmount.de
  *
-**/
+ */
 
-class pdfExport extends Plugin {
+// only allow moziloCMS environment
+if (!defined('IS_CMS')) {
+    die();
+}
 
-	public $admin_lang;
-	private $cms_lang;
+/**
+ * pdfExport Class
+ *
+ * @category PHP
+ * @package  PHP_MoziloPlugins
+ * @author   HPdesigner <mail@devmount.de>
+ * @license  GPL v3
+ * @link     https://github.com/devmount/pdfExport
+ */
+class pdfExport extends Plugin
+{
+    // language
+    private $_admin_lang;
+    private $_cms_lang;
 
-	function getContent($value) {
+    // plugin information
+    const PLUGIN_AUTHOR  = 'HPdesigner';
+    const PLUGIN_DOCU
+        = 'http://devmount.de/Develop/Mozilo%20Plugins/pdfExport.html';
+    const PLUGIN_TITLE   = 'pdfExport';
+    const PLUGIN_VERSION = 'v0.0.2013-10-13';
+    const MOZILO_VERSION = '2.0';
+    private $_plugin_tags = array(
+        'tag1' => '{pdfExport}',
+    );
 
-		global $CMS_CONF;
-		global $syntax;
-		global $specialchars;
-		global $CatPage;
-		
-		$this->cms_lang = new Language(PLUGIN_DIR_REL . 'pdfExport/sprachen/cms_language_' . $CMS_CONF->get('cmslanguage') . '.txt');
-				
-		// Druckansicht erzeugen
-		if (isset($_GET['pdfexport'])) {
+    const LOGO_URL = 'http://media.devmount.de/logo_pluginconf.png';
 
-			// template.html laden
-			$template_file = PLUGIN_DIR_REL . 'pdfExport/template.html';
-			if (!$file = @fopen($template_file, 'r'))
-				die($this->cms_lang->getLanguageValue('message_template_error', $template_file));
-			$template = fread($file, filesize($template_file));
-			fclose($file);
-	
-			// platzhalter {CONTENT} im template durch den aktuellen content ersetzen 
-			$content = $syntax->content;
-			preg_match("/---content~~~(.*)~~~content---/Umsi", $content, $match);
-			$content = $match[0];
-			$content = str_replace('{CONTENT}', $content, $template);
-			$syntax->content = $content;
+    /**
+     * set configuration elements, their default values and their configuration
+     * parameters
+     *
+     * @var array $_confdefault
+     *      text     => default, type, maxlength, size, regex
+     *      textarea => default, type, cols, rows, regex
+     *      password => default, type, maxlength, size, regex, saveasmd5
+     *      check    => default, type
+     *      radio    => default, type, descriptions
+     *      select   => default, type, descriptions, multiselect
+     */
+    private $_confdefault = array(
+        'linktext' => array(
+            'string',
+            'text',
+            '100',
+            '5',
+            "/^[0-9]{1,3}$/",
+        ),
+        'orientation' => array(
+            'Portrait',
+            'select',
+            array('Portrait','Landscape'),
+            false,
+        ),
+    );
 
-			return;
+    /**
+     * creates plugin content
+     *
+     * @param string $value Parameter divided by '|'
+     *
+     * @return string HTML output
+     */
+    function getContent($value)
+    {
+        global $CMS_CONF;
+        global $syntax;
+        global $specialchars;
+        global $CatPage;
 
-		} else {
-		// Link für aktuelle Seite mit URL-Parameter für pdfExport ausgeben
-			
-			// zusätzliche url parameter bei sitemap und suche extra mitgeben
-			$add_url_param = '';
-			// TODO ACTION_REQUEST und QUERY_REQUEST setzen!
-			if (isset($_GET['action'])) {
-				$add_url_param = '&action=' . $_GET['action'];
-				if (isset($_GET['search'])) $add_url_param .= '&search=' . $_GET['search'];
-			}
+        $this->_cms_lang = new Language(
+            $this->PLUGIN_SELF_DIR
+            . 'lang/cms_language_'
+            . $CMS_CONF->get('cmslanguage')
+            . '.txt'
+        );
 
-			// get conf
-			$conf = array(
-				'orientation'	=> ($this->settings->get('orientation') != '') ? $this->settings->get('orientation') : 'Portrait'
-			);
+        // get conf and set default
+        $conf = array();
+        foreach ($this->_confdefault as $elem => $default) {
+            $conf[$elem] = ($this->settings->get($elem) == '')
+                ? $default[0]
+                : $this->settings->get($elem);
+        }
 
-			// Link ausgeben
-			$link_text = $specialchars->rebuildSpecialChars($this->settings->get('linktext'),true,true);
-			$link = "<a href=\"javascript:pdf_url=location.href;location.href='http://pdfmyurl.com?url='+escape(pdf_url+'?pdfexport=true" . $add_url_param . "')+";
-			$link .= "'&-O=" . $conf['orientation'] . "'";
-			$link .= "\" class=\"pdfexport\" target=\"_blank\" title=\"Seite als PDF exportieren\">" . $link_text . "</a>";
+        $export = getRequestValue('pdfexport', 'get', false);
+        $action = getRequestValue('action', 'get', false);
+        $search = getRequestValue('search', 'get', false);
 
-			return $link;
-		}
+        // build print template
+        if ($export != '') {
+            // template.html laden
+            $template_file = PLUGIN_DIR_REL . 'pdfExport/template.html';
+            if (!$file = @fopen($template_file, 'r'))
+                die($this->cms_lang->getLanguageValue('message_template_error', $template_file));
+            $template = fread($file, filesize($template_file));
+            fclose($file);
 
-	} // function getContent
-	
-	
-	function getConfig() {
+            // platzhalter {CONTENT} im template durch den aktuellen content ersetzen
+            $content = $syntax->content;
+            preg_match("/---content~~~(.*)~~~content---/Umsi", $content, $match);
+            $content = $match[0];
+            $content = str_replace('{CONTENT}', $content, $template);
+            $syntax->content = $content;
 
-		$config = array();
-		
-		// content of link tag
-		$config['linktext']  = array(
-			'type' => 'text',
-			'description' => $this->admin_lang->getLanguageValue('config_linktext'),
-			'maxlength' => '100',
-			'size' => '45',
-		);
-		
-		// orientation
-		$config['orientation']  = array(
-			'type' => 'select',
-			'description' => $this->admin_lang->getLanguageValue('config_orientation'),
-			'descriptions' => array(
-				'Portrait' => 'Hochformat',
-				'Landscape' => 'Querformat'
-			),
-			'multiple' => false
-		);
+            return;
 
-		return $config;
-		
-	} // function getConfig    
-	
-	
-	function getInfo() {
+        } else {
+        // Link für aktuelle Seite mit URL-Parameter für pdfExport ausgeben
 
-		global $ADMIN_CONF;
+            // zusätzliche url parameter bei sitemap und suche extra mitgeben
+            $add_url_param = '';
+            // TODO ACTION_REQUEST und QUERY_REQUEST setzen!
+            if ($action != '') {
+                $add_url_param = '&action=' . $action;
+                if ($search != '') {
+                    $add_url_param .= '&search=' . $search;
+                }
+            }
 
-		$this->admin_lang = new Language(PLUGIN_DIR_REL . 'pdfExport/sprachen/admin_language_' . $ADMIN_CONF->get('language') . '.txt');
-				
-		$info = array(
-			// Plugin-Name + Version
-			'<b>pdfExport</b> v0.0.2013-10-13',
-			// moziloCMS-Version
-			'2.0',
-			// Kurzbeschreibung nur <span> und <br /> sind erlaubt
-			$this->admin_lang->getLanguageValue('description'), 
-			// Name des Autors
-			'HPdesigner',
-			// Docu-URL
-			'http://www.devmount.de/Develop/Mozilo%20Plugins/pdfExport.html',
-			// Platzhalter für die Selectbox in der Editieransicht 
-			// - ist das Array leer, erscheint das Plugin nicht in der Selectbox
-			array(
-				'{pdfExport}' => $this->admin_lang->getLanguageValue('placeholder'),
-			)
-		);
-		// return plugin information
-		return $info;
-		
-	} // function getInfo
+            // Link ausgeben
+            $link_text = $specialchars->rebuildSpecialChars($conf['linktext'], true, true);
+            $link = "<a href=\"javascript:pdf_url=location.href;location.href='http://pdfmyurl.com?url='+escape(pdf_url+'?pdfexport=true" . $add_url_param . "')+";
+            $link .= "'&-O=" . $conf['orientation'] . "'";
+            $link .= "\" class=\"pdfexport\" target=\"_blank\" title=\"Seite als PDF exportieren\">" . $link_text . "</a>";
+
+            return $link;
+        }
+
+    }
+
+    /**
+     * sets backend configuration elements and template
+     *
+     * @return Array configuration
+     */
+    function getConfig()
+    {
+        $config = array();
+
+        // read configuration values
+        foreach ($this->_confdefault as $key => $value) {
+            // handle each form type
+            switch ($value[1]) {
+            case 'text':
+                $config[$key] = $this->confText(
+                    $this->_admin_lang->getLanguageValue('config_' . $key),
+                    $value[2],
+                    $value[3],
+                    $value[4],
+                    $this->_admin_lang->getLanguageValue(
+                        'config_' . $key . '_error'
+                    )
+                );
+                break;
+
+            case 'textarea':
+                $config[$key] = $this->confTextarea(
+                    $this->_admin_lang->getLanguageValue('config_' . $key),
+                    $value[2],
+                    $value[3],
+                    $value[4],
+                    $this->_admin_lang->getLanguageValue(
+                        'config_' . $key . '_error'
+                    )
+                );
+                break;
+
+            case 'password':
+                $config[$key] = $this->confPassword(
+                    $this->_admin_lang->getLanguageValue('config_' . $key),
+                    $value[2],
+                    $value[3],
+                    $value[4],
+                    $this->_admin_lang->getLanguageValue(
+                        'config_' . $key . '_error'
+                    ),
+                    $value[5]
+                );
+                break;
+
+            case 'check':
+                $config[$key] = $this->confCheck(
+                    $this->_admin_lang->getLanguageValue('config_' . $key)
+                );
+                break;
+
+            case 'radio':
+                $descriptions = array();
+                foreach ($value[2] as $label) {
+                    $descriptions[$label] = $this->_admin_lang->getLanguageValue(
+                        'config_' . $key . '_' . $label
+                    );
+                }
+                $config[$key] = $this->confRadio(
+                    $this->_admin_lang->getLanguageValue('config_' . $key),
+                    $descriptions
+                );
+                break;
+
+            case 'select':
+                $descriptions = array();
+                foreach ($value[2] as $label) {
+                    $descriptions[$label] = $this->_admin_lang->getLanguageValue(
+                        'config_' . $key . '_' . $label
+                    );
+                }
+                $config[$key] = $this->confSelect(
+                    $this->_admin_lang->getLanguageValue('config_' . $key),
+                    $descriptions,
+                    $value[3]
+                );
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        // read admin.css
+        $admin_css = '';
+        $lines = file('../plugins/' . self::PLUGIN_TITLE. '/admin.css');
+        foreach ($lines as $line_num => $line) {
+            $admin_css .= trim($line);
+        }
+
+        // add template CSS
+        $template = '<style>' . $admin_css . '</style>';
+
+        // build Template
+        $template .= '
+            <div class="plugindraft-admin-header">
+            <span>'
+                . $this->_admin_lang->getLanguageValue(
+                    'admin_header',
+                    self::PLUGIN_TITLE
+                )
+            . '</span>
+            <a href="' . self::PLUGIN_DOCU . '" target="_blank">
+            <img style="float:right;" src="' . self::LOGO_URL . '" />
+            </a>
+            </div>
+        </li>
+        <li class="mo-in-ul-li ui-widget-content plugindraft-admin-li">
+            <div class="plugindraft-admin-subheader">'
+            . $this->_admin_lang->getLanguageValue('admin_test')
+            . '</div>
+            <div style="margin-bottom:5px;">
+                {test1_text}
+                {test1_description}
+                <span class="plugindraft-admin-default">
+                    [' . /*$this->_confdefault['test1'][0] .*/']
+                </span>
+            </div>
+            <div style="margin-bottom:5px;">
+                {test2_text}
+                {test2_description}
+                <span class="plugindraft-admin-default">
+                    [' . /*$this->_confdefault['test2'][0] .*/']
+                </span>
+        ';
+
+        $config['--template~~'] = $template;
+
+        return $config;
+    }
+
+    /**
+     * sets default backend configuration elements, if no plugin.conf.php is
+     * created yet
+     *
+     * @return Array configuration
+     */
+    function getDefaultSettings()
+    {
+        $config = array('active' => 'true');
+        foreach ($this->_confdefault as $elem => $default) {
+            $config[$elem] = $default[0];
+        }
+        return $config;
+    }
+
+    /**
+     * sets backend plugin information
+     *
+     * @return Array information
+     */
+    function getInfo()
+    {
+        global $ADMIN_CONF;
+
+        $this->_admin_lang = new Language(
+            $this->PLUGIN_SELF_DIR
+            . 'lang/admin_language_'
+            . $ADMIN_CONF->get('language')
+            . '.txt'
+        );
+
+        // build plugin tags
+        $tags = array();
+        foreach ($this->_plugin_tags as $key => $tag) {
+            $tags[$tag] = $this->_admin_lang->getLanguageValue('tag_' . $key);
+        }
+
+        $info = array(
+            '<b>' . self::PLUGIN_TITLE . '</b> ' . self::PLUGIN_VERSION,
+            self::MOZILO_VERSION,
+            $this->_admin_lang->getLanguageValue(
+                'description',
+                htmlspecialchars($this->_plugin_tags['tag1'])
+            ),
+            self::PLUGIN_AUTHOR,
+            self::PLUGIN_DOCU,
+            $tags
+        );
+
+        return $info;
+    }
+
+    /**
+     * creates configuration for text fields
+     *
+     * @param string $description Label
+     * @param string $maxlength   Maximum number of characters
+     * @param string $size        Size
+     * @param string $regex       Regular expression for allowed input
+     * @param string $regex_error Wrong input error message
+     *
+     * @return Array  Configuration
+     */
+    protected function confText(
+        $description,
+        $maxlength = '',
+        $size = '',
+        $regex = '',
+        $regex_error = ''
+    ) {
+        // required properties
+        $conftext = array(
+            'type' => 'text',
+            'description' => $description,
+        );
+        // optional properties
+        if ($maxlength != '') {
+            $conftext['maxlength'] = $maxlength;
+        }
+        if ($size != '') {
+            $conftext['size'] = $size;
+        }
+        if ($regex != '') {
+            $conftext['regex'] = $regex;
+        }
+        if ($regex_error != '') {
+            $conftext['regex_error'] = $regex_error;
+        }
+        return $conftext;
+    }
+
+    /**
+     * creates configuration for select fields
+     *
+     * @param string  $description  Label
+     * @param string  $descriptions Array Single item labels
+     * @param boolean $multiple     Enable multiple item selection
+     *
+     * @return Array   Configuration
+     */
+    protected function confSelect($description, $descriptions, $multiple = false)
+    {
+        // required properties
+        return array(
+            'type' => 'select',
+            'description' => $description,
+            'descriptions' => $descriptions,
+            'multiple' => $multiple,
+        );
+    }
+
+    /**
+     * throws styled error message
+     *
+     * @param string $text Content of error message
+     *
+     * @return string HTML content
+     */
+    protected function throwError($text)
+    {
+        return '<div class="' . self::PLUGIN_TITLE . 'Error">'
+            . '<div>' . $this->_cms_lang->getLanguageValue('error') . '</div>'
+            . '<span>' . $text. '</span>'
+            . '</div>';
+    }
 
 }
 
