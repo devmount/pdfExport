@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="de">
+<head>
+	<meta name="keywords" content="{WEBSITE_KEYWORDS}" />
+	<meta name="description" content="{WEBSITE_DESCRIPTION}" />
+	<meta http-equiv="Content-Type" content="text/html; charset={CHARSET}" />
+	<meta http-equiv="Content-Script-Type" content="text/javascript" />
+	<meta http-equiv="Content-Style-Type" content="text/css" />
+	<title>{WEBSITE_TITLE}</title>
+	<link rel="SHORTCUT ICON" href="{LAYOUT_DIR}/favicon.ico" />
+	<link rel='stylesheet' href='/plugins/PrintView/printview_style.css' />
+	<link rel='stylesheet' href='/plugins/MenuSubs/plugin.css' />
+</head>
+<body> 
+	<div id="main">
+		<div id="header"><img src="{LAYOUT_DIR}/grafiken/logo_devmount_webprint.png" /></div>
+		<div id="site_content">
+			<div id="content">{CONTENT}</div>
+		</div>
+		<br style="clear: both;" />
+	</div>
+
+	<div id="footer">
+		{MenuSubs|breadcrumb}
+		www.devmount.de {COPYDATE}, Andreas Müller
+	</div>
+
+</body>
+</html>

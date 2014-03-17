@@ -1,0 +1,13 @@
+/*
+	pdfExport CSS styles
+*/
+
+.pdfexport {
+	font-family: entyporegular, Arial;
+	font-size: 36px;
+	color: #ccc;
+	margin-left: 7px;
+	display: inline-block;
+	vertical-align: bottom;
+	font-size: 42px;
+}

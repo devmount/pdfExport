@@ -1,0 +1,4 @@
+placeholder				= Returns the pdfExport link.
+description				= Generates a pdfExport link, to stream the current content page into an PDF file with the help of the pdfmyurl.com webservice.<br /><br /><span style='font-weight:bold'>Use:</span><br /><span style='font-family:monospace;margin:3px 3px; background-color:#eee;border:1px dotted #aaa;'>{pdfExport}</span> Inserts the pdfExport link<br /><br /><span style='font-weight:bold'>Documentation:</span><br />A detailed documentation can be found on <span style="font-style:italic;">www.devmount.de </span> (link above).
+config_linktext			= Content of pdfExport link
+config_orientation		= Page orientation
