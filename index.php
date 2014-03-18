@@ -72,9 +72,9 @@ class pdfExport extends Plugin
         'linktext' => array(
             'string',
             'text',
-            '100',
-            '5',
-            "/^[0-9]{1,3}$/",
+            '',
+            '',
+            '',
         ),
         'orientation' => array(
             'Portrait',
@@ -283,20 +283,29 @@ class pdfExport extends Plugin
         </li>
         <li class="mo-in-ul-li ui-widget-content pdfexport-admin-li">
             <div class="pdfexport-admin-subheader">'
-            . $this->_admin_lang->getLanguageValue('admin_test')
+            . $this->_admin_lang->getLanguageValue('admin_link')
             . '</div>
             <div style="margin-bottom:5px;">
-                {test1_text}
-                {test1_description}
+                <div style="width:32%;display:inline-block;margin-right:5px;">
+                    {linktext_text}
+                </div>
+                {linktext_description}
                 <span class="pdfexport-admin-default">
-                    [' . /*$this->_confdefault['test1'][0] .*/']
+                    [' . $this->_confdefault['linktext'][0] .']
                 </span>
             </div>
+        </li>
+        <li class="mo-in-ul-li ui-widget-content pdfexport-admin-li">
+            <div class="pdfexport-admin-subheader">'
+            . $this->_admin_lang->getLanguageValue('admin_pdf')
+            . '</div>
             <div style="margin-bottom:5px;">
-                {test2_text}
-                {test2_description}
+                <div style="width:32%;display:inline-block;margin-right:5px;">
+                    {orientation_select}
+                </div>
+                {orientation_description}
                 <span class="pdfexport-admin-default">
-                    [' . /*$this->_confdefault['test2'][0] .*/']
+                    [' . $this->_confdefault['orientation'][0] .']
                 </span>
         ';
 
