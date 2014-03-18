@@ -79,7 +79,7 @@ class pdfExport extends Plugin
         'orientation' => array(
             'Portrait',
             'select',
-            array('Portrait','Landscape'),
+            array('portrait','landscape'),
             false,
         ),
     );
@@ -139,6 +139,22 @@ class pdfExport extends Plugin
             $content = str_replace('{CONTENT}', $content, $template);
             $syntax->content = $content;
 
+
+            // convert in PDF
+            // require_once $this->PLUGIN_SELF_DIR . 'html2pdf/html2pdf.class.php';
+            // try
+            // {
+            //     $html2pdf = new HTML2PDF('P', 'A4', 'fr');
+            //     $html2pdf->setModeDebug();
+            //     $html2pdf->setDefaultFont('Arial');
+            //     $html2pdf->writeHTML($content, isset($_GET['vuehtml']));
+            //     $html2pdf->Output('exemple00.pdf');
+            // }
+            // catch(HTML2PDF_exception $e) {
+            //     echo $e;
+            //     exit;
+            // }
+
             return;
 
         } else { // build link
@@ -158,11 +174,18 @@ class pdfExport extends Plugin
             $link .= 'href="javascript: pdf_url=location.href;';
             $link .= 'location.href=\'http://pdfmyurl.com?url=\'';
             $link .= '+escape(pdf_url+\'?pdfexport=true' . $add_url_param . '\')';
-            $link .= '+\'&-O=' . $conf['orientation'] . '\'" ';
+            $link .= '+\'&orientation=' . $conf['orientation'] . '\'" ';
             $link .= 'class="pdfexport" ';
-            $link .= 'target="_blank"';
+            $link .= 'target="_blank" ';
             $link .= 'title="Seite als PDF exportieren" ';
             $link .= '>' . $link_text . '</a>';
+            // $link = '
+            // <a
+            //     class="pdfexport"
+            //     target="_blank"
+            //     title="Seite als PDF exportieren"
+            //     href="?pdfexport=true"
+            // >' . $link_text . '</a>';
 
             return $link;
         }
