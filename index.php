@@ -70,7 +70,7 @@ class pdfExport extends Plugin
      */
     private $_confdefault = array(
         'linktext' => array(
-            'string',
+            'PDF Export',
             'text',
             '',
             '',
@@ -286,7 +286,7 @@ class pdfExport extends Plugin
             . $this->_admin_lang->getLanguageValue('admin_link')
             . '</div>
             <div style="margin-bottom:5px;">
-                <div style="width:32%;display:inline-block;margin-right:5px;">
+                <div class="pdfexport-single-conf">
                     {linktext_text}
                 </div>
                 {linktext_description}
@@ -300,7 +300,7 @@ class pdfExport extends Plugin
             . $this->_admin_lang->getLanguageValue('admin_pdf')
             . '</div>
             <div style="margin-bottom:5px;">
-                <div style="width:32%;display:inline-block;margin-right:5px;">
+                <div class="pdfexport-single-conf">
                     {orientation_select}
                 </div>
                 {orientation_description}
