@@ -12,7 +12,7 @@
  * @package  PHP_MoziloPlugins
  * @author   HPdesigner <mail@devmount.de>
  * @license  GPL v3
- * @version  GIT: v0.0.2013-10-13
+ * @version  GIT: v0.1.2013-10-13
  * @link     https://github.com/devmount/pdfExport
  * @link     http://devmount.de/Develop/Mozilo%20Plugins/pdfExport.html
  * @see      Give thanks to the LORD, for he is good; his love endures forever.
@@ -48,7 +48,7 @@ class pdfExport extends Plugin
     const PLUGIN_DOCU
         = 'http://devmount.de/Develop/Mozilo%20Plugins/pdfExport.html';
     const PLUGIN_TITLE   = 'pdfExport';
-    const PLUGIN_VERSION = 'v0.0.2013-10-13';
+    const PLUGIN_VERSION = 'v0.1.2013-10-13';
     const MOZILO_VERSION = '2.0';
     private $_plugin_tags = array(
         'tag1' => '{pdfExport}',
@@ -119,14 +119,20 @@ class pdfExport extends Plugin
 
         // build print template
         if ($export != '') {
-            // template.html laden
-            $template_file = PLUGIN_DIR_REL . 'pdfExport/template.html';
-            if (!$file = @fopen($template_file, 'r'))
-                die($this->cms_lang->getLanguageValue('message_template_error', $template_file));
+            // load template
+            $template_file = $this->PLUGIN_SELF_DIR . 'template.html';
+            if (!$file = @fopen($template_file, 'r')) {
+                return $this->throwError(
+                    $this->cms_lang->getLanguageValue(
+                        'message_template_error',
+                        $template_file
+                    )
+                );
+            }
             $template = fread($file, filesize($template_file));
             fclose($file);
 
-            // platzhalter {CONTENT} im template durch den aktuellen content ersetzen
+            // fill placeholder {CONTENT} with current page content
             $content = $syntax->content;
             preg_match("/---content~~~(.*)~~~content---/Umsi", $content, $match);
             $content = $match[0];
@@ -135,12 +141,9 @@ class pdfExport extends Plugin
 
             return;
 
-        } else {
-        // Link für aktuelle Seite mit URL-Parameter für pdfExport ausgeben
-
-            // zusätzliche url parameter bei sitemap und suche extra mitgeben
+        } else { // build link
+            // add get params
             $add_url_param = '';
-            // TODO ACTION_REQUEST und QUERY_REQUEST setzen!
             if ($action != '') {
                 $add_url_param = '&action=' . $action;
                 if ($search != '') {
@@ -148,11 +151,18 @@ class pdfExport extends Plugin
                 }
             }
 
-            // Link ausgeben
-            $link_text = $specialchars->rebuildSpecialChars($conf['linktext'], true, true);
-            $link = "<a href=\"javascript:pdf_url=location.href;location.href='http://pdfmyurl.com?url='+escape(pdf_url+'?pdfexport=true" . $add_url_param . "')+";
-            $link .= "'&-O=" . $conf['orientation'] . "'";
-            $link .= "\" class=\"pdfexport\" target=\"_blank\" title=\"Seite als PDF exportieren\">" . $link_text . "</a>";
+            // return link
+            $link_text
+                = $specialchars->rebuildSpecialChars($conf['linktext'], true, true);
+            $link = '<a ';
+            $link .= 'href="javascript: pdf_url=location.href;';
+            $link .= 'location.href=\'http://pdfmyurl.com?url=\'';
+            $link .= '+escape(pdf_url+\'?pdfexport=true' . $add_url_param . '\')';
+            $link .= '+\'&-O=' . $conf['orientation'] . '\'" ';
+            $link .= 'class="pdfexport" ';
+            $link .= 'target="_blank"';
+            $link .= 'title="Seite als PDF exportieren" ';
+            $link .= '>' . $link_text . '</a>';
 
             return $link;
         }
@@ -259,7 +269,7 @@ class pdfExport extends Plugin
 
         // build Template
         $template .= '
-            <div class="plugindraft-admin-header">
+            <div class="pdfexport-admin-header">
             <span>'
                 . $this->_admin_lang->getLanguageValue(
                     'admin_header',
@@ -271,21 +281,21 @@ class pdfExport extends Plugin
             </a>
             </div>
         </li>
-        <li class="mo-in-ul-li ui-widget-content plugindraft-admin-li">
-            <div class="plugindraft-admin-subheader">'
+        <li class="mo-in-ul-li ui-widget-content pdfexport-admin-li">
+            <div class="pdfexport-admin-subheader">'
             . $this->_admin_lang->getLanguageValue('admin_test')
             . '</div>
             <div style="margin-bottom:5px;">
                 {test1_text}
                 {test1_description}
-                <span class="plugindraft-admin-default">
+                <span class="pdfexport-admin-default">
                     [' . /*$this->_confdefault['test1'][0] .*/']
                 </span>
             </div>
             <div style="margin-bottom:5px;">
                 {test2_text}
                 {test2_description}
-                <span class="plugindraft-admin-default">
+                <span class="pdfexport-admin-default">
                     [' . /*$this->_confdefault['test2'][0] .*/']
                 </span>
         ';
