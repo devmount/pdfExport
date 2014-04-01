@@ -137,6 +137,10 @@ class pdfExport extends Plugin
             preg_match("/---content~~~(.*)~~~content---/Umsi", $content, $match);
             $content = $match[0];
             $content = str_replace('{CONTENT}', $content, $template);
+
+            // $mysyntax = new Syntax;
+            // $content = $syntax->convertContent($content, true);
+
             $syntax->content = $content;
 
 
