@@ -46,7 +46,7 @@ class pdfExport extends Plugin
     // plugin information
     const PLUGIN_AUTHOR  = 'HPdesigner';
     const PLUGIN_DOCU
-        = 'http://devmount.de/Develop/Mozilo%20Plugins/pdfExport.html';
+        = 'http://devmount.de/Develop/moziloCMS/Plugins/pdfExport.html';
     const PLUGIN_TITLE   = 'pdfExport';
     const PLUGIN_VERSION = 'v0.1.2013-10-13';
     const MOZILO_VERSION = '2.0';
