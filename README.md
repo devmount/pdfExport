@@ -23,8 +23,8 @@ Here comes the general description of the plugin tag.
 2. Parameter ```<param2>```: Short description of parameter 2.
 
 ## License
-This Plugin is distributed under *GNU General Public License, Version 3* (see LICENSE).
+This Plugin is distributed under *GNU General Public License, Version 3* (see LICENSE) or, at your choice, any further version.
 
 ## Documentation
 A detailed documentation and demo can be found on DEVMOUNT's website:
-http://devmount.de/Develop/Mozilo%20Plugins/pdfExport.html
+http://devmount.de/Develop/moziloCMS/Plugins/pdfExport.html
