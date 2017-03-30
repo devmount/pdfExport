@@ -13,8 +13,7 @@
  * @author   DEVMOUNT <mail@devmount.de>
  * @license  GPL v3+
  * @version  GIT: v0.1.2013-10-13
- * @link     https://github.com/devmount-mozilo/pdfExport
- * @link     http://devmount.de/Develop/moziloCMS/Plugins/pdfExport.html
+ * @link     https://github.com/devmount-mozilo/pdfExport/wiki/Dokumentation
  * @see      Give thanks to the LORD, for he is good; his love endures forever.
  *           – The Bible
  *
@@ -49,7 +48,7 @@ class pdfExport extends Plugin
     const PLUGIN_VERSION = 'v0.1.2013-10-13';
     const MOZILO_VERSION = '2.0';
     const PLUGIN_DOCU
-        = 'http://devmount.de/Develop/moziloCMS/Plugins/pdfExport.html';
+        = 'https://github.com/devmount-mozilo/pdfExport/wiki/Dokumentation';
 
     private $_plugin_tags = array(
         'tag1' => '{pdfExport}',
